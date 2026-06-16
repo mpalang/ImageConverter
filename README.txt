@@ -1,4 +1,2 @@
-To build .exe, run: 
-pyinstaller imageconverter.py --windowed --specpath build_files --workpath build_files/build --distpath release
-
-with --onefile option it will only be one file but slower at startup.
+This is a first version of my Image Converter. So far it can only convert HEIC to JPG or PNG. More options will come.
+There also seem to still be issues with deleting the files.
