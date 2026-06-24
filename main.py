@@ -11,21 +11,35 @@ from pathlib import Path
 if str(Path(__file__)) not in sys.path:
     sys.path.append(str(Path(__file__)))
 from gui.MainWindow import MainWindow
-from cpp import read_png
+from cpp import png_reader
 
 
 def main():
-    app = QApplication(sys.argv)
     
     if type(sys.argv) == str:
         default_input_path = sys.argv
     else:
-        default_input_path = r'C:\Users'
-    
+        # default_input_path = r'C:\Users'
+        default_input_path = str(Path(Path(__file__).parent,'Test'))
+        
+    app = QApplication.instance()
+
+    if app is None:
+        app = QApplication(sys.argv)
+        
     window = MainWindow(default_input_path)
     window.show()
 
-    sys.exit(app.exec())
+    
+    if not QApplication.instance().startingUp():
+        sys.exit(app.exec())
+    else:
+       app.exec()
+    app = QApplication(sys.argv)
+    
+
+    
+
         
 if __name__ == "__main__":
     main()

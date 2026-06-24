@@ -28,9 +28,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 import sys
 
-if str(Path(__file__).parent) not in sys.path:
-    sys.path.append(str(Path(__file__).parent))
-from utils.read.PNG import read_png
+if str(Path(__file__).parent.parent) not in sys.path:
+    sys.path.append(str(Path(__file__).parent.parent))
+from cpp import png_reader
+from utils.file_operations import get_files, copy_file, delete_file
 
 
 class MainWindow(QWidget):
@@ -66,12 +67,12 @@ class MainWindow(QWidget):
         layout.addWidget(self.cb_extrafolder)
         
         layout_format = QHBoxLayout()
-        self.dm_format_in = QComboBox()
-        self.dm_format_in.addItems(["HEIC", "HEIF"])
-        layout_format.addWidget(self.dm_format_in)
-        self.dm_format = QComboBox()
-        self.dm_format.addItems(["JPEG", "PNG"])
-        layout_format.addWidget(self.dm_format)
+        self.format_in = QComboBox()
+        self.format_in.addItems(["HEIC", "HEIF","PNG","ICO","JPG"])
+        layout_format.addWidget(self.format_in)
+        self.format_out = QComboBox()
+        self.format_out.addItems(["HEIC","PNG","ICO","JPG", "PNG"])
+        layout_format.addWidget(self.format_out)
         layout.addLayout(layout_format)
         
         # Progress
@@ -112,54 +113,37 @@ class MainWindow(QWidget):
 
     def copy_files(self):
       try: 
-        input_path = self.entry_inputpath.text()
-        file_format = self.dm_format.currentText()
+        self.input_path = self.entry_inputpath.text()
+        self.format_in = self.format_in.currentText().lower()
+        self.format_out = self.format_out.currentText().lower()
+        self.include_subfolders = self.cb_subfolders.isChecked()
         
         #Get files:
-        if self.dm_format_in.currentText().lower()=='heic':
-            if self.cb_subfolders.isChecked():
-                HEIC_files = list(Path(input_path).rglob('*.HEIC'))
-            else:
-                HEIC_files = list(Path(input_path).glob('*.HEIC'))
-            
-            if len(HEIC_files)>0:
-                for n,file in enumerate(HEIC_files):
-                    # create a new filename for the PNG file
-                    if self.cb_extrafolder.isChecked():
-                        output_folder = 'HEICto'+file_format.upper()
-                        os.makedirs(Path(input_path,output_folder), exist_ok=True)
-                        new_file = Path(input_path,output_folder,file.stem+'.'+file_format.lower())
-                    else:
-                        new_file = Path(file).with_suffix('.'+file_format.lower())
-                    
-                    #Output:
-                    self.status_label.setText(
-    f'''saving file ({n+1}/{len(HEIC_files)}): {Path(new_file).name}
-    To: {Path(new_file).parent}
-    Format: {file_format}'''
-                            )
-                    
-                    QApplication.processEvents()
-                    
-                    #Copy HEIC file to new format
-                    pillow_heif.register_heif_opener()
-                    with Image.open(file) as img:
-                        if file_format.lower() == 'jpg' or file_format.lower() == 'jpeg' :
-                            img.save(new_file, quality=95)
-                        elif file_format.lower() == 'png':
-                            img.save(new_file, format=file_format)
+        files = get_files(self.input_path,self.format_in,subfolders=self.include_subfolders)
+           
+        if len(files)>0:
+            for n,file in enumerate(files):
+                # create a new filename for the PNG file
+                new_file = self.make_filename(file)
                 
-                #delete original
-                if self.cb_deloriginal.isChecked():
-                    if os.path.getsize(new_file)>0:
-                        os.unlink(file)
-                    else:
-                        msg = QMessageBox()
-                        msg.setIcon(QMessageBox.Critical)
-                        msg.setText("Maybe something wrong with the copying...")
-                
-                self.progress_bar.setValue(int((n + 1) / len(HEIC_files) * 100))
+                #Output:
+                self.status_label.setText(
+                        f'''saving file ({n+1}/{len(files)}): {Path(new_file).name}
+                        To: {Path(new_file).parent}
+                        Format: {self.format_out}'''                              )
                 QApplication.processEvents()
+                
+                copy_file(file,new_file,self.format_in,self.format_out)
+                
+                if self.cb_deloriginal.isChecked():
+                    try:
+                        delete_file(file,new_file)
+                    except Exception as e:
+                        QMessageBox.critical(self,'Error',f'Could not delete file:\n {e}')
+                
+            self.progress_bar.setValue(int((n + 1) / len(files) * 100))
+            QApplication.processEvents()
+            
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -180,7 +164,17 @@ class MainWindow(QWidget):
         msg.setDetailedText(str(e)) # Optional: shows full traceback if formatted
         msg.setWindowTitle("Error")
         msg.exec_()
-        
+    
+    def make_filename(self,file):
+        if self.cb_extrafolder.isChecked():
+            output_folder = f'{self.format_in.upper()}_to_{self.format_out.upper()}'
+            os.makedirs(Path(self.input_path,output_folder), exist_ok=True)
+            new_file = Path(self.input_path,output_folder,file.stem+'.'+self.format_out)
+        else:
+            new_file = Path(file).with_suffix('.'+self.format_out.lower())
+            
+        return new_file
+    
     def exit_app(self):
         self.close()
   
