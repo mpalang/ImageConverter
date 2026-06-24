@@ -30,9 +30,10 @@ import sys
 
 if str(Path(__file__).parent.parent) not in sys.path:
     sys.path.append(str(Path(__file__).parent.parent))
-from cpp import png_reader
-from utils.file_operations import get_files, copy_file, delete_file
-
+# from cpp import png_reader
+from utils.logger import add_logger
+logger = add_logger(__name__)
+import traceback
 
 class MainWindow(QWidget):
     def __init__(self, default_input_path):
@@ -67,12 +68,12 @@ class MainWindow(QWidget):
         layout.addWidget(self.cb_extrafolder)
         
         layout_format = QHBoxLayout()
-        self.format_in = QComboBox()
-        self.format_in.addItems(["HEIC", "HEIF","PNG","ICO","JPG"])
-        layout_format.addWidget(self.format_in)
-        self.format_out = QComboBox()
-        self.format_out.addItems(["HEIC","PNG","ICO","JPG", "PNG"])
-        layout_format.addWidget(self.format_out)
+        self.format_in_input = QComboBox()
+        self.format_in_input.addItems(["HEIC", "HEIF","PNG","ICO","JPEG"])
+        layout_format.addWidget(self.format_in_input)
+        self.format_out_input = QComboBox()
+        self.format_out_input.addItems(["HEIC","PNG","ICO","JPEG", "PNG"])
+        layout_format.addWidget(self.format_out_input)
         layout.addLayout(layout_format)
         
         # Progress
@@ -114,12 +115,12 @@ class MainWindow(QWidget):
     def copy_files(self):
       try: 
         self.input_path = self.entry_inputpath.text()
-        self.format_in = self.format_in.currentText().lower()
-        self.format_out = self.format_out.currentText().lower()
-        self.include_subfolders = self.cb_subfolders.isChecked()
+        self.format_in = self.format_in_input.currentText().lower()
+        self.format_out = self.format_out_input.currentText().lower()
+        
         
         #Get files:
-        files = get_files(self.input_path,self.format_in,subfolders=self.include_subfolders)
+        files = self.get_files()
            
         if len(files)>0:
             for n,file in enumerate(files):
@@ -133,22 +134,24 @@ class MainWindow(QWidget):
                         Format: {self.format_out}'''                              )
                 QApplication.processEvents()
                 
-                copy_file(file,new_file,self.format_in,self.format_out)
+                pillow_heif.register_heif_opener()
+                img = Image.open(file)
+                img.save(new_file, format=self.format_out.upper())
                 
                 if self.cb_deloriginal.isChecked():
                     try:
-                        delete_file(file,new_file)
+                        self.delete_file(file)
                     except Exception as e:
                         QMessageBox.critical(self,'Error',f'Could not delete file:\n {e}')
                 
-            self.progress_bar.setValue(int((n + 1) / len(files) * 100))
-            QApplication.processEvents()
+                self.progress_bar.setValue(int((n + 1) / len(files) * 100))
+                QApplication.processEvents()
             
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
-            msg.setText("No HEIC files")
-            self.status_label.setText('No HEIC files found.')
+            msg.setText(f"No {self.format_in}-files")
+            self.status_label.setText(f'No {self.format_in}-files found.')
             QApplication.processEvents() 
             
         #Output:
@@ -157,13 +160,21 @@ class MainWindow(QWidget):
         QApplication.processEvents() 
         
       except Exception as e:
+        logger.error(traceback.format_exc())
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("An error occurred")
         msg.setInformativeText(str(e))
-        msg.setDetailedText(str(e)) # Optional: shows full traceback if formatted
+        msg.setDetailedText(traceback.format_exc()) # Optional: shows full traceback if formatted
         msg.setWindowTitle("Error")
         msg.exec_()
+
+    def get_files(self):
+        if self.cb_subfolders.isChecked():
+            files = list(Path(self.input_path).rglob(f'*.{self.format_in}', case_sensitive=False))
+        else:
+            files = list(Path(self.input_path).glob(f'*.{self.format_in}', case_sensitive=False))
+        return files
     
     def make_filename(self,file):
         if self.cb_extrafolder.isChecked():
@@ -175,6 +186,12 @@ class MainWindow(QWidget):
             
         return new_file
     
+    def delete_file(self,file):
+        if Path(file).exists():
+            if Path(file).stat().st_size:
+                Path(file).unlink()
+            
+                 
     def exit_app(self):
         self.close()
   
