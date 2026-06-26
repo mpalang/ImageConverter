@@ -16,7 +16,7 @@ from utils.logger import setup_logger, add_logger
 setup_logger()
 logger = add_logger(__name__)
 
-def main():
+if __name__ == "__main__":
     QCoreApplication.setOrganizationName("SmoereApps")
     QCoreApplication.setApplicationName("ImageConverter")
     
@@ -41,9 +41,3 @@ def main():
        app.exec()
     app = QApplication(sys.argv)
     
-
-    
-
-        
-if __name__ == "__main__":
-    main()

@@ -1,3 +1,0 @@
-C:/users/morit/onedrive/anwendungen/imageconverter/cpp/build/CMakeFiles/png_reader.dir
-C:/users/morit/onedrive/anwendungen/imageconverter/cpp/build/CMakeFiles/ALL_BUILD.dir
-C:/users/morit/onedrive/anwendungen/imageconverter/cpp/build/CMakeFiles/ZERO_CHECK.dir
