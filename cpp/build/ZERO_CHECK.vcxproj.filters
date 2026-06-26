@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\users\morit\onedrive\anwendungen\imageconverter\cpp\build\CMakeFiles\e75294bac8e7dfd22cba57c10ac61b0f\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{90DA6714-2BD7-3B19-8533-99CBF3EF3455}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
