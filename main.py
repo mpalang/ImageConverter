@@ -25,13 +25,8 @@ if __name__=='__main__':
 
     if app is None:
         app = QApplication(sys.argv)
-        
-    if type(sys.argv) == str:
-        default_input_path = sys.argv
-    else:
-        default_input_path = Path(Path(__file__).parent,'Test')
-        
-    window = MainWindow(str(default_input_path))
+                
+    window = MainWindow()
     window.show()
 
     

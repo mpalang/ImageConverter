@@ -36,8 +36,8 @@ logger = add_logger(__name__)
 
 
 class MainWindow(QWidget):
-    def __init__(self, default_input_path):
-        self.path = default_input_path
+    def __init__(self):
+
         #Initialize
         super().__init__()
         icon_path = Path(Path(__file__).parent.parent,'icon.ico')
@@ -62,7 +62,7 @@ class MainWindow(QWidget):
         layout.addWidget(QLabel("Options:"))
         layout_folder = QHBoxLayout()
         self.entry_inputpath = QLineEdit()
-        self.entry_inputpath.setText(self.path)
+        #self.entry_inputpath.setText(self.path)
         layout_folder.addWidget(self.entry_inputpath)
         button_folder = QPushButton()
         button_folder.clicked.connect(self.filepath_dialog)
@@ -85,7 +85,7 @@ class MainWindow(QWidget):
         self.format_in_input.addItems(["HEIC","JPEG","PNG","ICO"])
         layout_format.addWidget(self.format_in_input)
         self.format_out_input = QComboBox()
-        self.format_out_input.addItems(["HEIC","JPEG","PNG","ICO"])
+        self.format_out_input.addItems(["JPEG","PNG","ICO"])
         layout_format.addWidget(self.format_out_input)
         layout.addLayout(layout_format)
         
@@ -149,6 +149,15 @@ Format: {self.format_out}
                                    
                 pillow_heif.register_heif_opener()
                 img = Image.open(file)
+                if self.format_out == 'jpeg':
+                    if len(img.split()) == 4:
+                        img_old = img
+                        img = Image.new("RGB", img_old.size, (255, 255, 255))
+                        img.paste(img_old, mask=img_old.split()[3])
+                    else:
+                        if img.mode != 'RGB':
+                            img = img.convert('rgb')
+
                 img.save(new_file, format=self.format_out.upper())
                 img.close()
                 
