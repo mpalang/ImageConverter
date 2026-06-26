@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 # from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
 import sys
+<<<<<<< Updated upstream
 
 if str(Path(__file__).parent.parent) not in sys.path:
     sys.path.append(str(Path(__file__).parent.parent))
@@ -34,13 +35,30 @@ if str(Path(__file__).parent.parent) not in sys.path:
 from utils.logger import add_logger
 logger = add_logger(__name__)
 import traceback
+=======
+# Add personal modules:
+if str(Path(__file__).parent) not in sys.path:
+  sys.path.append(str(Path(__file__).parent))
+from utils.logger import add_logger
+logger = add_logger(__name__)
+>>>>>>> Stashed changes
 
 class MainWindow(QWidget):
     def __init__(self, default_input_path):
-        
+        self.path = default_input_path
         #Initialize
         super().__init__()
-        
+        self.build_gui()
+
+    # =============================================================================
+    # =============================================================================
+    # =============================================================================
+    # =============================================================================
+    # =============================================================================
+    # Functions
+    # =============================================================================
+    
+    def build_gui(self):
         self.setWindowTitle("Image Converter")
         self.resize(300, 300)
         layout = QVBoxLayout()
@@ -49,7 +67,7 @@ class MainWindow(QWidget):
         layout.addWidget(QLabel("Options:"))
         layout_folder = QHBoxLayout()
         self.entry_inputpath = QLineEdit()
-        self.entry_inputpath.setText(default_input_path)
+        self.entry_inputpath.setText(self.path)
         layout_folder.addWidget(self.entry_inputpath)
         button_folder = QPushButton()
         button_folder.clicked.connect(self.filepath_dialog)
@@ -100,12 +118,16 @@ class MainWindow(QWidget):
         layout.addLayout(layout_execute)
         
         self.setLayout(layout)
+<<<<<<< Updated upstream
 
     # =============================================================================
     # =============================================================================
     # Functions
     # =============================================================================
 
+=======
+    
+>>>>>>> Stashed changes
     def filepath_dialog(self):
         # Opens dialog and returns selected directory path
         self.input_path = QFileDialog.getExistingDirectory(self, "Select Directory", self.entry_inputpath.text())
@@ -120,6 +142,7 @@ class MainWindow(QWidget):
         
         
         #Get files:
+<<<<<<< Updated upstream
         files = self.get_files()
            
         if len(files)>0:
@@ -132,6 +155,57 @@ class MainWindow(QWidget):
                         f'''saving file ({n+1}/{len(files)}): {Path(new_file).name}
                         To: {Path(new_file).parent}
                         Format: {self.format_out}'''                              )
+=======
+        if self.dm_format_in.currentText().lower()=='heic':
+            if self.cb_subfolders.isChecked():
+                HEIC_files = list(Path(input_path).rglob('*.HEIC'))
+            else:
+                HEIC_files = list(Path(input_path).glob('*.HEIC'))
+            
+            if len(HEIC_files)>0:
+                for n,file in enumerate(HEIC_files):
+                    # create a new filename for the PNG file
+                    if self.cb_extrafolder.isChecked():
+                        output_folder = 'HEICto'+file_format.upper()
+                        os.makedirs(Path(input_path,output_folder), exist_ok=True)
+                        new_file = Path(input_path,output_folder,file.stem+'.'+file_format.lower())
+                    else:
+                        new_file = Path(file).with_suffix('.'+file_format.lower())
+                    
+                    #Output:
+                    self.status_label.setText(
+                        f'''saving file ({n+1}/{len(HEIC_files)}): {Path(new_file).name}
+                        To: {Path(new_file).parent}
+                        Format: {file_format}'''
+                            )
+                    
+                    QApplication.processEvents()
+                    
+                    #Copy HEIC file to new format
+                    pillow_heif.register_heif_opener()
+                    with Image.open(file) as img:
+                        if file_format.lower() == 'jpg' or file_format.lower() == 'jpeg' :
+                            img.save(new_file, quality=95)
+                        elif file_format.lower() == 'png':
+                            img.save(new_file, format=file_format)
+                            
+                    img.close()
+                    if Path(new_file).exists():
+                        logger.info(f'Copied file {Path(file)} to {Path(new_file)}')
+                        
+                
+                #delete original
+                if self.cb_deloriginal.isChecked():
+                    if os.path.getsize(new_file)>0:
+                        os.unlink(file)
+                        logger.info(f'Deleted {Path(file)}.')
+                    else:
+                        msg = QMessageBox()
+                        msg.setIcon(QMessageBox.Critical)
+                        msg.setText("Maybe something wrong with the copying...")
+                
+                self.progress_bar.setValue(int((n + 1) / len(HEIC_files) * 100))
+>>>>>>> Stashed changes
                 QApplication.processEvents()
                 
                 pillow_heif.register_heif_opener()
@@ -198,6 +272,7 @@ class MainWindow(QWidget):
   
 # =============================================================================
 # =============================================================================
+<<<<<<< Updated upstream
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -212,3 +287,43 @@ if __name__ == "__main__":
 
     sys.exit(app.exec())
 
+=======
+# =============================================================================
+# =============================================================================
+# =============================================================================
+# =============================================================================
+
+
+        
+if __name__ == "__main__":
+        # app = QApplication(sys.argv)
+        
+        # if type(sys.argv) == str:
+        #     default_input_path = sys.argv
+        # else:
+        #     default_input_path = r'C:\Users'
+        
+        # window = MainWindow(default_input_path)
+        # window.show()
+
+        # sys.exit(app.exec())
+
+    # Spyder workaround:
+        app = QApplication.instance()
+
+        if app is None:
+            app = QApplication(sys.argv)
+
+        if type(sys.argv) == str:
+            default_input_path = sys.argv
+        else:
+            default_input_path = r'C:\Users\morit\OneDrive\Bilder\Test'
+        
+        window = MainWindow(default_input_path)
+        window.show()
+
+        if not QApplication.instance().startingUp():
+            sys.exit(app.exec())
+        else:
+            app.exec()
+>>>>>>> Stashed changes
