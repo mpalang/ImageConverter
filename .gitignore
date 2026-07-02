@@ -1,6 +1,7 @@
 .vs/*
 
 # pyinstaller build files
-build/
-dist/
+/build
 *.spec
+/dist
+/dist
